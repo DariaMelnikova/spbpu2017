@@ -13,7 +13,7 @@ instance Applicative FunMonad where
 
 instance Monad FunMonad where
     return a  = FunMonad ( \() -> a )
-    m >>= k = FunMonad $  \() -> fun ( k (fun m ()) ) ()
+    m >>= k = k (fun m ())  
     fail = error
 
 
