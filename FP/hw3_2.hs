@@ -11,10 +11,15 @@ instance (Show a) => Show (ReverseList a) where
     show l = show (toList l)
 
 instance (Eq a) => Eq (ReverseList a) where
-    (==) a b = (==) (toList a) (toList b)
+    (==) RNil RNil = True
+    (==) _ RNil = False
+    (==) RNil _ = False
+    (==) (RCons a1 b1) (RCons a2 b2) = a1 == a2 && b1 == b2
 
 instance (Ord a) => Ord (ReverseList a) where
-    (<=) a b = (<=) (toList a) (toList b)
+    (<=) RNil _ = True
+    (<=) _ RNil = False
+    (<=) (RCons a1 b1) (RCons a2 b2) = b1 <= b2 || a1 <= a2
 
 instance Monoid (ReverseList a) where
     mempty = RNil

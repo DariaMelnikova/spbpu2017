@@ -13,7 +13,7 @@ instance Monoid (PSet' a) where
 -- Actually, I can do more Monoid instances, but it will be unlogical
 
 instance Functor PSet where
-    fmap _ _ = PSet (\_ -> False)
+    fmap f (PSet a) = PSet (\ x -> x == f a)
 -- Looks like this is the only possible realisation.
 -- For example:
 --    contains :: PSet a -> a -> Bool
