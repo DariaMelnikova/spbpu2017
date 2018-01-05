@@ -6,12 +6,14 @@ data Dyn = Fun (Dyn -> Dyn)
          | Char Char
          | Int Integer
 
+reduce (App (Fun f) a) = f a
+reduce (App a b) = reduce $ App (reduce a) b
 
 instance Show Dyn where
     show (Char a)   = "Dynamic " ++ show a
     show (Int a)    = "Dynamic " ++ show a
-    show (Fun f)    = "some function"
-    show (App f a)  = "apply some function to " ++ show a
+    show (Fun _)    = "some function"
+    show a@(App f x)  =  show $ reduce a
 
 
 instance Eq Dyn where
@@ -80,11 +82,17 @@ instance Integral Dyn where
 
 
 
-i :: Dyn -> Dyn
-i = id
+i :: Dyn 
+i = Fun id
 
-k :: Dyn -> Dyn -> Dyn
-k  = App
+k :: Dyn
+k  = Fun ( \a -> Fun $ \_ -> a )
 
-s :: (Dyn -> Dyn -> Dyn) -> (Dyn -> Dyn) -> Dyn -> Dyn
-s f1 f2 a = App (Fun (\a2 -> f1 a a2)) (App (Fun f2) a)
+s :: Dyn -> Dyn -> Dyn -> Dyn
+s f1 f2 a = App (App f1 a) (App f2 a)
+
+-- Looks like you've meant small omega combinator, cause there is no info about M
+-- So it mean that s i i = w and w i = i 
+-- And it is:
+test x = App (s i i i) x
+
