@@ -14,10 +14,12 @@ remove EmptyTree _ = EmptyTree
 remove leaf@(Leaf l p) x = if (l == x) then EmptyTree else leaf
 remove (Node v l r p) x | x < v = Node v (remove l x) r p
                         | x > v = Node v l (remove r x) p
-                        | otherwise = concat l r
-                  where concat EmptyTree t = t
-                        concat (Leaf v p) t = Node v EmptyTree t p
-                        concat (Node v l r p) t = Node v l (concat r t) p
+                        | otherwise = concat p l r
+                  where concat p EmptyTree EmptyTree = EmptyTree
+                        concat p EmptyTree (Leaf v p0) = Leaf v p
+                        concat p EmptyTree (Node v l r p0) = Node v l r p
+                        concat p (Leaf v p0) t = let node = Node v EmptyTree (concat node EmptyTree t) p in node
+                        concat p (Node v l r p0) t = let node = Node v l (concat node r t) p in node
 
 containsElement :: BinaryTree -> Integer -> Bool
 containsElement EmptyTree _ = False
