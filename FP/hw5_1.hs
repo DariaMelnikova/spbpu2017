@@ -2,6 +2,48 @@ import Control.Lens hiding (op)
 import Term
 import ReverseList
 
+getLeft :: Term -> Term
+getLeft (BinaryTerm l r op) = getLeft l
+getLeft (UnaryTerm op t)= getLeft t
+getLeft t = t
+
+setLeft :: Term -> Term -> Term
+setLeft (BinaryTerm l r op) x = BinaryTerm (setLeft l x) r op
+setLeft (UnaryTerm op t) x = UnaryTerm op (setLeft t x) 
+setLeft t x = x
+
+leftTermLens :: Lens' Term Term 
+leftTermLens = lens getLeft setLeft
+
+getFirstMult :: Term -> Maybe (Term, Term)
+getFirstMult (UnaryTerm _ t) = getFirstMult t
+getFirstMult (BinaryTerm l r op) | op == Mult = Just (l,r)
+                                 | otherwise = if leftRes == Nothing then getFirstMult r
+                                               else leftRes
+                                    where leftRes = getFirstMult l
+getFirstMult _ = Nothing
+ 
+setFirstMult :: Term -> Maybe (Term, Term) -> Term
+setFirstMult t Nothing = t
+setFirstMult (UnaryTerm _ t) p = setFirstMult t p
+setFirstMult (BinaryTerm l r op) p@(Just (l0,r0)) | op == Mult = BinaryTerm l0 r0 op
+                                                  | otherwise = if getFirstMult l == Nothing then BinaryTerm l (setFirstMult r p) op
+                                               else BinaryTerm (setFirstMult l p) r op
+setFirstMult t _ = t
+
+firstMultLens :: Lens' Term (Maybe (Term, Term))
+firstMultLens = lens getFirstMult setFirstMult
+
+--tests--
+veryBigTerm = BinaryTerm (BinaryTerm (UnaryTerm Minus (IntConstant 4)) (BinaryTerm (Variable "a") (IntConstant 2) Mult) Plus) (BinaryTerm (BinaryTerm (IntConstant 42) (IntConstant 4) Mult) (BinaryTerm (Variable "a") (IntConstant 2) Mult) Plus) Plus
+
+leftTestGet = veryBigTerm ^. leftTermLens
+leftTestSet = veryBigTerm & leftTermLens .~ (Variable "replaced term")
+
+multTestGet = veryBigTerm ^. firstMultLens
+multTestSet = veryBigTerm & firstMultLens .~ Just (Variable "replaced", Variable "terms")
+
+
 valueLens :: Lens' Term Term
 valueLens = lens value (\ term newValue -> term { value = newValue })
 
