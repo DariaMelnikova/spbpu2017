@@ -91,7 +91,7 @@ k  = Fun ( \a -> Fun $ \_ -> a )
 s :: Dyn -> Dyn -> Dyn -> Dyn
 s f1 f2 a = App (App f1 a) (App f2 a)
 
--- Looks like you've meant small omega combinator, cause there is no info about M
+
 -- So it mean that s i i = w and w i = i 
 -- And it is:
 test x = App (s i i i) x

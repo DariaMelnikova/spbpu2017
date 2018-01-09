@@ -1,39 +1,42 @@
-data BinaryTree = EmptyTree
-                | Leaf Integer BinaryTree
-                | Node { value::Integer,
-                         left:: BinaryTree,
-                         right::BinaryTree,
-                         parent::BinaryTree
-                       } deriving Show
+data BinaryTree = Root
+                | Leaf { parent :: BinaryTree}
+                | Node { value :: Integer,
+                         left :: BinaryTree,
+                         right :: BinaryTree,
+                         parent :: BinaryTree
+                       }
+
 
 insert :: BinaryTree -> Integer -> BinaryTree
-insert EmptyTree x = Leaf x EmptyTree
-insert node@(Leaf l p) x | x < l = let newNode  = Node l (Leaf x newNode) EmptyTree ( update_child p newNode) in newNode
-                         | otherwise = let newNode = Node l EmptyTree (Leaf x newNode) (update_child p newNode) in newNode
-                              where update_child (Node v0 node r0 p0) child = Node v0 child r0 p0
-                                    update_child (Node v0 l0 node p0) child = Node v0 l0 child p0
-                                    update_child _ _ = error "wrong parent node"
-insert (Node v l r p) x | x < v = Node v (insert l x) r p
-                        | otherwise = Node v l (insert r x) p
-                             
+insert Root x = let n = Node x (Leaf n) (Leaf n) Root in n 
+insert (Leaf p) x = let n = Node x (Leaf n) (Leaf n) p in n
+insert node@(Node v l r p) x | x < v = let n = Node v (insert' l x n) r p in n
+                             | otherwise = let n = Node v l (insert' r x n) p in n
+insert' (Leaf p) x p0 = let n = Node x (Leaf n) (Leaf n) p0 in n
+insert' node@(Node v l r p) x p0 | x < v = let n = Node v (insert' l x n) r p0 in n
+                                 | otherwise = let n = Node v l (insert' r x n) p0 in n
+
+
 remove :: BinaryTree -> Integer -> BinaryTree
-remove EmptyTree _ = EmptyTree
-remove leaf@(Leaf l p) x = if (l == x) then EmptyTree else leaf
-remove (Node v l r p) x | x < v = Node v (remove l x) r p
-                        | x > v = Node v l (remove r x) p
-                        | otherwise = concat p l r
-                  where concat p EmptyTree EmptyTree = EmptyTree
-                        concat p EmptyTree (Leaf v p0) = Leaf v p
-                        concat p EmptyTree (Node v l r p0) = Node v l r p
-                        concat p (Leaf v p0) t = let node = Node v EmptyTree (concat node EmptyTree t) (update_child p node) in node
-                        concat p (Node v l r p0) t = let node = Node v l (concat node r t) (update_child p node) in node
-                        update_child (Node v0 node r0 p0) child = Node v0 child r0 p0
-                        update_child (Node v0 l0 node p0) child = Node v0 l0 child p0
-                        update_child _ _ = error "wrong parent node"
+remove Root _ = Root
+remove l@(Leaf _) _ = l
+remove node@(Node v l r p) x | x < v = let n = Node v (remove' l x n) r p in n
+                             | x > v = let n = Node v l (remove' r x n) p in n
+                             | otherwise = concat' p l r
+
+remove' l@(Leaf _) x p0 = Leaf p0
+remove' node@(Node v l r p) x p0 | x < v = let n = Node v (remove' l x n) r p0 in n
+                                 | x > v = let n = Node v l (remove' r x n) p0 in n
+                                 | otherwise = concat' p0 l r
+
+concat' Root (Leaf _) (Leaf _) = Root
+concat' p (Leaf _) (Leaf _) = Leaf p
+concat' p (Leaf _) (Node v l r p0) = Node v l r p
+concat' p (Node v l r p0) t = let n = Node v l (concat' n r t) p in n
+
 
 containsElement :: BinaryTree -> Integer -> Bool
-containsElement EmptyTree _ = False
-containsElement (Leaf l p)  x = x == l
-containsElement (Node v l r p) x | x < v = containsElement l x
+containsElement (Node v l r _) x | x < v = containsElement l x
                                  | x > v = containsElement r x
-                                 | otherwise = v == x
+                                 | otherwise = True
+containsElement _ _ = False
